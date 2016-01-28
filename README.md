@@ -25,6 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @TAG(NICTA_DOC_AGPL)
   -->
 
+# DO NOT FORK OR CLONE THIS REPOSITORY
+
+This is an unofficial fork of eChronos. Please use [the official echronos repository instead.](https://github.com/echronos/echronos)
+
+
 # Repository README
 
 ## Overview
