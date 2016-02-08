@@ -543,12 +543,12 @@ def check_ident(s):
     if len(s) == 0:
         raise ValueError("Ident string must not be empty.")
 
-    if s[0] not in string.ascii_lowercase:
+    if s[0] not in string.ascii_lowercase + string.ascii_uppercase:
         raise ValueError("First character of an indent must be a lower-case ascii character.")
 
-    valid_chars = string.ascii_lowercase + string.digits + '_'
+    valid_chars = string.ascii_lowercase + string.ascii_uppercase + string.digits + '_'
     if any(c not in valid_chars for c in s):
-        raise ValueError("Ident must only contains ASCII lower-case, digits and '_'")
+        raise ValueError("Ident must only contains ASCII lower-case, upper-case, digits and '_'")
 
 
 def xml2dict(el, schema=None):
