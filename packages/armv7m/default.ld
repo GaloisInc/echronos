@@ -42,7 +42,7 @@ SECTIONS
         { *(.vectors) }
 
         .text : AT (LOADADDR(.vectors) + SIZEOF(.vectors))
-        { *(.text.startup) *(.text) }
+        { *(.text.startup) *(.text.memset) *(.text) }
 
         .rodata : AT (LOADADDR (.text) + SIZEOF(.text))
         { *(.rodata*) }
