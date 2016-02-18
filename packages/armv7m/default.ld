@@ -30,48 +30,57 @@ OUTPUT_ARCH(arm)
 ENTRY(vector_table)
 MEMORY
 {
-  flash (rx) : ORIGIN = 0x8000000, LENGTH = 0x200000
-  sram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x20000
-  ccsram (rwx) : ORIGIN = 0x10000000, LENGTH = 0x1000
+  flash (rx)   : ORIGIN = 0x8000000,  LENGTH = 0x200000
+  sram (rwx)   : ORIGIN = 0x20000000, LENGTH = 0x20000
+  ccsram (rwx) : ORIGIN = 0x10000000, LENGTH = 0x10000
 }
 SECTIONS
 {
-        . = {{code_addr}};
+        /* These values are computed externally */
+        _code_addr       = {{code_addr}};
+        _data_addr       = {{data_addr}};
+        _flash_load_addr = {{flash_load_addr}};
+        _bitband_size    = {{bitband_size}};
+        _bitband_alias   = {{bitband_alias}};
+        _bitband_base    = {{bitband_base}};
+        _stack_size      = {{stack_size}};
+
+        . = _code_addr;
         ro_start = .;
-        .vectors : AT ({{flash_load_addr}})
+        .vectors : AT (_flash_load_addr)
         { *(.vectors) }
 
         .text : AT (LOADADDR(.vectors) + SIZEOF(.vectors))
-        { *(.text.startup) *(.text.memset) *(.text) }
+        { *(.text.startup) *(.text .text.*) }
 
         .rodata : AT (LOADADDR (.text) + SIZEOF(.text))
         { *(.rodata*) }
 
         ro_end = ALIGN(4);
 
-        . = {{data_addr}};
-        .data.bitband : AT ({{flash_load_addr}} + (ro_end - ro_start))
+        . = _data_addr;
+        .data.bitband : AT (_flash_load_addr + (ro_end - ro_start))
         {
               *(.data.bitband)
         }
 
         /* Check that bitband variables don't overflow */
-        dummy = ASSERT(. <= {{data_addr}} + {{bitband_size}}, "bitband variables too large");
+        dummy = ASSERT(. <= _data_addr + _bitband_size, "bitband variables too large");
 
         .data : AT (LOADADDR(.data.bitband) + SIZEOF(.data.bitband))
         {
-              *(.data)
+              *(.data .data.*)
               . = ALIGN(4);
         }
 
         data_load_addr = LOADADDR(.data.bitband);
         data_virt_addr = ADDR(.data.bitband);
-        data_size = . - ADDR(.data.bitband);
+        data_size      = . - ADDR(.data.bitband);
 
         /* Check addresses are correct */
         dummy = ASSERT(data_load_addr % 4 == 0, "data_load_addr not word aligned");
         dummy = ASSERT(data_virt_addr % 4 == 0, "data_virt_addr not word aligned");
-        dummy = ASSERT(data_size % 4 == 0, "data_size not word aligned");
+        dummy = ASSERT(data_size      % 4 == 0, "data_size not word aligned"     );
 
         .bss :
         {
@@ -81,16 +90,16 @@ SECTIONS
         }
 
         bss_virt_addr = ADDR(.bss);
-        bss_size = SIZEOF(.bss);
+        bss_size      = SIZEOF(.bss);
 
         .stack : {
-               . = . + {{stack_size}};
+               .     = . + _stack_size;
                stack = .;
         }
 
         /* Aliases for all the bitband variables */
         {{#bit_aliases}}
-        {{.}}_bitband = {{bitband_alias}} + (({{.}} - {{bitband_base}}) * 32);
+        {{.}}_bitband = _bitband_alias + (({{.}} - _bitband_base) * 32);
         {{/bit_aliases}}
 
         /* Debug sections */
