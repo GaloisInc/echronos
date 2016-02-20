@@ -28,15 +28,10 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(vector_table)
-MEMORY
-{
-  flash  (rx)  : ORIGIN = {{flash_load_addr}},  LENGTH = 0x200000
-  sram   (rwx) : ORIGIN = 0x20000000, LENGTH = 0x20000
-  ccsram (rwx) : ORIGIN = 0x10000000, LENGTH = 0x10000
-}
 SECTIONS
 {
-        ro_start = {{flash_load_addr}};
+        . = {{code_addr}};
+        ro_start = .;
         .vectors : AT ({{flash_load_addr}})
         { *(.vectors) }
 
