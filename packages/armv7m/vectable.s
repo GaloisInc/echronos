@@ -100,6 +100,27 @@ Specifically, this loads the .data section from flash in to SRAM, and then zeros
 */
 .type entry,#function
 entry:
+        /* CPACR is located at address 0xE000ED88 */
+        LDR.W   R0, =0xE000ED88
+        /* Read CPACR */
+        LDR R1, [R0]
+        /* Set bits 20-23 to enable CP10 and CP11 coprocessors */
+        ORR     R1, R1, #(0xF << 20)
+        /* Write back the modified value to the CPACR */
+        STR     R1, [R0] /* wait for store to complete */
+        DSB
+        /* reset pipeline now the FPU is enabled */
+        ISB
+        /* Load .data.bitband section */
+        ldr r0, =databitband_load_addr
+        ldr r1, =databitband_virt_addr
+        ldr r2, =databitband_size
+1:      cbz r2, 2f
+        ldm r0!, {r3}
+        stm r1!, {r3}
+        sub r2, #4
+        b 1b
+2:
         /* Load .data section */
         ldr r0, =data_load_addr
         ldr r1, =data_virt_addr

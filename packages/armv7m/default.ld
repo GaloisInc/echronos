@@ -49,6 +49,10 @@ SECTIONS
               *(.data.bitband)
         }
 
+        databitband_load_addr = LOADADDR(.data.bitband);
+        databitband_virt_addr =     ADDR(.data.bitband);
+        databitband_size      = . - ADDR(.data.bitband);
+
         /* Check that bitband variables don't overflow */
         dummy = ASSERT(. <= {{data_addr}} + {{bitband_size}}, "bitband variables too large");
 
@@ -58,9 +62,9 @@ SECTIONS
               . = ALIGN(4);
         }
 
-        data_load_addr = LOADADDR(.data.bitband);
-        data_virt_addr = ADDR(.data.bitband);
-        data_size = . - ADDR(.data.bitband);
+        data_load_addr = LOADADDR(.data);
+        data_virt_addr =     ADDR(.data);
+        data_size      = . - ADDR(.data);
 
         /* Check addresses are correct */
         dummy = ASSERT(data_load_addr % 4 == 0, "data_load_addr not word aligned");
