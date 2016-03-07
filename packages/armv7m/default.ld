@@ -28,15 +28,27 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(vector_table)
+MEMORY
+{
+  /* TODO: Put all of these values into the python file */
+  flash  (rx)  : ORIGIN = {{flash_load_addr}}, LENGTH = 0x200000
+  sram   (rwx) : ORIGIN = {{data_addr}}, LENGTH = 0x20000
+  ccsram (rwx) : ORIGIN = 0x10000000, LENGTH = 0x1000
+}
 SECTIONS
 {
         . = {{code_addr}};
-        ro_start = .;
-        .vectors : AT ({{flash_load_addr}})
-        { *(.vectors) }
+        ro_start = {{flash_load_addr}};
+        .vectors : /* AT ({{flash_load_addr}}) */
+        { *(.vectors) } > flash
 
         .text : AT (LOADADDR(.vectors) + SIZEOF(.vectors))
-        { *(.text.startup) *(.text .text.*) }
+        { *(.text.startup) *(.text .text.*)
+          *(.eh_frame)
+          *(.jcr)
+          KEEP(*(.init))
+          KEEP(*(.fini))
+        }
 
         .rodata : AT (LOADADDR (.text) + SIZEOF(.text))
         { *(.rodata*) }
@@ -73,9 +85,13 @@ SECTIONS
 
         .bss :
         {
-             *(.bss)
+             _sbss = ABSOLUTE(.);
+             __bss_start__ = ABSOLUTE(_sbss);
+             *(.bss .bss.*)
              *(COMMON)
              . = ALIGN(4);
+             _ebss = ABSOLUTE(.);
+             __bss_end__ = ABSOLUTE(_ebss);
         }
 
         bss_virt_addr = ADDR(.bss);
@@ -84,6 +100,12 @@ SECTIONS
         .stack : {
                . = . + {{stack_size}};
                stack = .;
+        }
+
+        ._user_heap_stack : AT (0x10000000) {
+          . = ALIGN(4);
+          PROVIDE(end = .);
+          PROVIDE(_end = .);
         }
 
         /* Aliases for all the bitband variables */
