@@ -39,27 +39,27 @@ SECTIONS
 {
         . = {{code_addr}};
         ro_start = {{flash_load_addr}};
-        .vectors : /* AT ({{flash_load_addr}}) */
+        .vectors :
         { *(.vectors) } > flash
 
-        .text : AT (LOADADDR(.vectors) + SIZEOF(.vectors))
+        .text :
         { *(.text.startup) *(.text .text.*)
           *(.eh_frame)
           *(.jcr)
           KEEP(*(.init))
           KEEP(*(.fini))
-        }
+        } > flash
 
-        .rodata : AT (LOADADDR (.text) + SIZEOF(.text))
-        { *(.rodata*) }
+        .rodata :
+        { *(.rodata*) } > flash
 
         ro_end = ALIGN(4);
 
         . = {{data_addr}};
-        .data.bitband : AT ({{flash_load_addr}} + (ro_end - ro_start))
+        .data.bitband :
         {
               *(.data.bitband)
-        }
+        } > sram AT > flash
 
         databitband_load_addr = LOADADDR(.data.bitband);
         databitband_virt_addr =     ADDR(.data.bitband);
@@ -68,11 +68,11 @@ SECTIONS
         /* Check that bitband variables don't overflow */
         dummy = ASSERT(. <= {{data_addr}} + {{bitband_size}}, "bitband variables too large");
 
-        .data : AT (LOADADDR(.data.bitband) + SIZEOF(.data.bitband))
+        .data :
         {
               *(.data .data.*)
               . = ALIGN(4);
-        }
+        } > sram AT > flash
 
         data_load_addr = LOADADDR(.data);
         data_virt_addr =     ADDR(.data);
@@ -92,7 +92,7 @@ SECTIONS
              . = ALIGN(4);
              _ebss = ABSOLUTE(.);
              __bss_end__ = ABSOLUTE(_ebss);
-        }
+        } > sram
 
         bss_virt_addr = ADDR(.bss);
         bss_size = SIZEOF(.bss);
@@ -100,13 +100,13 @@ SECTIONS
         .stack : {
                . = . + {{stack_size}};
                stack = .;
-        }
+        } > sram
 
-        ._user_heap_stack : AT (0x10000000) {
+        ._user_heap_stack : {
           . = ALIGN(4);
           PROVIDE(end = .);
           PROVIDE(_end = .);
-        }
+        } > sram AT > ccsram
 
         /* Aliases for all the bitband variables */
         {{#bit_aliases}}
