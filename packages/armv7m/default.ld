@@ -48,6 +48,7 @@ SECTIONS
           *(.jcr)
           KEEP(*(.init))
           KEEP(*(.fini))
+          KEEP(*(.tm_clone_table))
         } > flash
 
         .rodata :
